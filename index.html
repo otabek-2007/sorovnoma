@@ -16,7 +16,7 @@
 </head>
 <body>
   <div class="container">
-    <h2>Oqqo'rg'on so‘rovnomasi</h2>
+    <h2>Oqqo'rg'on kelajagi: Ishni oson qilamiz!</h2>
 
     <div class="question" data-id="q1">
       <p>1. Ilova ichida barcha xizmatlar bo‘lishi kerakmi?</p>
@@ -74,6 +74,9 @@
       q3: ['Ha', 'Yo‘q']
     };
 
+    // For each question, we will track if the user has voted
+    const userVotes = {};
+
     Object.keys(questions).forEach(qid => {
       const viewsRef = ref(db, `polls/${qid}/views`);
       runTransaction(viewsRef, current => (current || 0) + 1);
@@ -104,8 +107,19 @@
     });
 
     window.vote = (qid, option) => {
+      if (userVotes[qid]) {
+        // If a vote has already been made for this question, update it
+        const previousVote = userVotes[qid];
+        if (previousVote !== option) {
+          const previousVoteRef = ref(db, `polls/${qid}/votes/${previousVote}`);
+          runTransaction(previousVoteRef, current => (current || 0) - 1);
+        }
+      }
       const voteRef = ref(db, `polls/${qid}/votes/${option}`);
       runTransaction(voteRef, current => (current || 0) + 1);
+
+      // Track the user's vote
+      userVotes[qid] = option;
     };
   </script>
 </body>

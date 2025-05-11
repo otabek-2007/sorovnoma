@@ -27,16 +27,7 @@
       </div>
       <div class="result" id="result-q1"></div>
     </div>
-    <div class="question" data-id="q3">
-      <p>3. Ilovada yangiliklar va ob-havo bo‘limlari kerakmi?</p>
-      <div class="views" id="views-q3">👁 0</div>
-      <div class="options">
-        <button onclick="vote('q3', 'Ha')">Ha</button>
-        <button onclick="vote('q3', 'Yo‘q')">Yo‘q</button>
-      </div>
-      <div class="result" id="result-q3"></div>
-    </div>
-    
+
     <div class="question" data-id="q2">
       <p>2. Taksi, ovqat, to‘lov — barchasi bitta ilovada foydali deb o‘ylaysizmi?</p>
       <div class="views" id="views-q2">👁 0</div>
@@ -46,6 +37,16 @@
         <button onclick="vote('q2', 'Yo‘q')">Yo‘q</button>
       </div>
       <div class="result" id="result-q2"></div>
+    </div>
+
+    <div class="question" data-id="q3">
+      <p>3. Ilovada yangiliklar va ob-havo bo‘limlari kerakmi?</p>
+      <div class="views" id="views-q3">👁 0</div>
+      <div class="options">
+        <button onclick="vote('q3', 'Ha')">Ha</button>
+        <button onclick="vote('q3', 'Yo‘q')">Yo‘q</button>
+      </div>
+      <div class="result" id="result-q3"></div>
     </div>
   </div>
 
@@ -58,7 +59,7 @@
       authDomain: "sorovnoma-93601.firebaseapp.com",
       databaseURL: "https://sorovnoma-93601-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "sorovnoma-93601",
-      storageBucket: "sorovnoma-93601.firebasestorage.app",
+      storageBucket: "sorovnoma-93601.appspot.com",
       messagingSenderId: "607837032856",
       appId: "1:607837032856:web:a319a6e101b92c12d25bed",
       measurementId: "G-Q3KH2LFVTW"
@@ -69,7 +70,8 @@
 
     const questions = {
       q1: ['Ha', 'Yo‘q'],
-      q2: ['Ha albatta', 'Kerakli ekan', 'Yo‘q']
+      q2: ['Ha albatta', 'Kerakli ekan', 'Yo‘q'],
+      q3: ['Ha', 'Yo‘q']
     };
 
     Object.keys(questions).forEach(qid => {

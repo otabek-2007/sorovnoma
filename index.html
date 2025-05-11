@@ -4,33 +4,66 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>So‘rovnoma</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
-    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
-    .question { margin-bottom: 30px; }
-    .options button { display: block; width: 100%; margin: 5px 0; padding: 10px; border: none; background: #ddd; cursor: pointer; border-radius: 6px; }
-    .bar { height: 14px; background: #4caf50; border-radius: 4px; transition: 0.3s; }
+    .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+    .question { margin-bottom: 40px; }
+    .options button {
+      display: block; width: 100%; margin: 5px 0;
+      padding: 10px; border: none;
+      background: #ddd; cursor: pointer; border-radius: 6px;
+    }
+    .bar {
+      height: 14px; background: #4caf50;
+      border-radius: 4px; transition: 0.3s;
+    }
     .result { margin-top: 10px; }
     .views { font-size: 0.9em; color: #666; }
+    .summary {
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 2px dashed #ccc;
+    }
+    .summary h3 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .summary-chart {
+      margin-top: 10px;
+    }
+    .summary-bar {
+      background-color: #2196f3;
+      color: white;
+      padding: 6px 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2 style="text-align:center; margin-bottom: 30px;">Oqqo‘rg‘on kelajagi: Ishni oson qilamiz!</h2>
+    <h2 style="text-align:center; margin-bottom: 30px;">Oqqo‘rg‘on kelajagi: Fikringiz biz uchun muhim!</h2>
 
-
+    <!-- SAVOL 1 -->
     <div class="question" data-id="q1">
-      <p>1. Ilova ichida barcha xizmatlar bo‘lishi kerakmi?</p>
+      <p>1. Siz uchun barcha xizmatlar (taksi, to‘lov, ovqat buyurtma va h.k.) <strong>bitta ilovada jamlangan bo‘lsa</strong>, bu qulaymi?</p>
       <div class="views" id="views-q1">👁 0</div>
       <div class="options">
         <button onclick="vote('q1', 'Ha')">Ha</button>
         <button onclick="vote('q1', 'Yo‘q')">Yo‘q</button>
       </div>
       <div class="result" id="result-q1"></div>
+      <canvas id="chart-q1" height="150"></canvas>
     </div>
 
+    <!-- SAVOL 2 -->
     <div class="question" data-id="q2">
-      <p>2. Taksi, ovqat, to‘lov — barchasi bitta ilovada foydali deb o‘ylaysizmi?</p>
+      <p>2. Sizga taksi chaqirish, ovqat buyurtma qilish va to‘lovlarni amalga oshirishni <strong>bitta ilova orqali bajarish</strong> qulay bo‘ladimi?</p>
       <div class="views" id="views-q2">👁 0</div>
       <div class="options">
         <button onclick="vote('q2', 'Ha albatta')">Ha albatta</button>
@@ -38,16 +71,25 @@
         <button onclick="vote('q2', 'Yo‘q')">Yo‘q</button>
       </div>
       <div class="result" id="result-q2"></div>
+      <canvas id="chart-q2" height="150"></canvas>
     </div>
 
+    <!-- SAVOL 3 -->
     <div class="question" data-id="q3">
-      <p>3. Ilovada yangiliklar va ob-havo bo‘limlari kerakmi?</p>
+      <p>3. Ilovada yangiliklar va ob-havo bo‘limlari kerak deb o‘ylaysizmi?</p>
       <div class="views" id="views-q3">👁 0</div>
       <div class="options">
         <button onclick="vote('q3', 'Ha')">Ha</button>
         <button onclick="vote('q3', 'Yo‘q')">Yo‘q</button>
       </div>
       <div class="result" id="result-q3"></div>
+      <canvas id="chart-q3" height="150"></canvas>
+    </div>
+
+    <!-- UMUMIY ANALIZ -->
+    <div class="summary" id="summary">
+      <h3>📊 Umumiy natijalar (qisqacha ko‘rinishda)</h3>
+      <div id="summary-chart" class="summary-chart"></div>
     </div>
   </div>
 
@@ -70,12 +112,21 @@
     const db = getDatabase(app);
 
     const questions = {
-      q1: ['Ha', 'Yo‘q'],
-      q2: ['Ha albatta', 'Kerakli ekan', 'Yo‘q'],
-      q3: ['Ha', 'Yo‘q']
+      q1: {
+        text: "1-savol",
+        options: ['Ha', 'Yo‘q']
+      },
+      q2: {
+        text: "2-savol",
+        options: ['Ha albatta', 'Kerakli ekan', 'Yo‘q']
+      },
+      q3: {
+        text: "3-savol",
+        options: ['Ha', 'Yo‘q']
+      }
     };
 
-    // For each question, we will track if the user has voted
+    const charts = {};
     const userVotes = {};
 
     Object.keys(questions).forEach(qid => {
@@ -94,36 +145,93 @@
         const resultDiv = document.getElementById(`result-${qid}`);
         resultDiv.innerHTML = '';
 
-        questions[qid].forEach(opt => {
+        questions[qid].options.forEach(opt => {
           const count = data[opt] || 0;
           const percent = Math.round((count / total) * 100);
           resultDiv.innerHTML += `
             <div style="margin-top: 5px;">
               ${opt}: ${count} ta (${percent}%)
               <div class="bar" style="width: ${percent}%"></div>
-            </div>
-          `;
+            </div>`;
         });
+
+        // Chart.js bilan diagramma
+        const ctx = document.getElementById(`chart-${qid}`).getContext('2d');
+        const labels = questions[qid].options;
+        const values = labels.map(opt => data[opt] || 0);
+
+        if (charts[qid]) {
+          charts[qid].data.datasets[0].data = values;
+          charts[qid].update();
+        } else {
+          charts[qid] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Ovozlar soni',
+                data: values,
+                backgroundColor: '#4caf50'
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => {
+                      const value = ctx.raw;
+                      const percent = Math.round((value / total) * 100);
+                      return `${value} ta (${percent}%)`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { precision: 0 }
+                }
+              }
+            }
+          });
+        }
+
+        updateSummaryChart(qid, total);
       });
     });
 
     window.vote = (qid, option) => {
-    const voteKey = `vote-${qid}`;
-    const previousVote = localStorage.getItem(voteKey);
+      const voteKey = `vote-${qid}`;
+      const previousVote = localStorage.getItem(voteKey);
 
-    if (previousVote === option) return; // bir xil variantni yana bosmasin
+      if (previousVote === option) return;
 
-    if (previousVote) {
-      const previousVoteRef = ref(db, `polls/${qid}/votes/${previousVote}`);
-      runTransaction(previousVoteRef, current => Math.max((current || 1) - 1, 0)); // eski ovozni kamaytir
+      if (previousVote) {
+        const previousVoteRef = ref(db, `polls/${qid}/votes/${previousVote}`);
+        runTransaction(previousVoteRef, current => Math.max((current || 1) - 1, 0));
+      }
+
+      const voteRef = ref(db, `polls/${qid}/votes/${option}`);
+      runTransaction(voteRef, current => (current || 0) + 1);
+      localStorage.setItem(voteKey, option);
+    };
+
+    function updateSummaryChart(qid, totalVotes) {
+      const chart = document.getElementById("summary-chart");
+      const text = questions[qid].text;
+      let bar = document.getElementById(`summary-${qid}`);
+
+      if (!bar) {
+        bar = document.createElement("div");
+        bar.id = `summary-${qid}`;
+        bar.className = "summary-bar";
+        chart.appendChild(bar);
+      }
+
+      bar.innerHTML = `${text} <span>${totalVotes} ta ovoz</span>`;
     }
-
-    const voteRef = ref(db, `polls/${qid}/votes/${option}`);
-    runTransaction(voteRef, current => (current || 0) + 1); // yangi variantga ovoz qo‘sh
-
-    localStorage.setItem(voteKey, option); // tanlovni localStorage ga yoz
-  };
-
   </script>
 </body>
 </html>

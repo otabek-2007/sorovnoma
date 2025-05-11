@@ -3,154 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Oqqo'rg'on uchun xizmat so'rovnomasi</title>
+  <title>So‘rovnoma</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
-      color: #333;
-    }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    .question {
-      margin-bottom: 25px;
-    }
-    .options button {
-      display: block;
-      width: 100%;
-      margin: 8px 0;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      background-color: #eee;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .options button:hover {
-      background-color: #d6eaff;
-    }
-    .result {
-      margin-top: 10px;
-    }
-    .bar {
-      height: 16px;
-      background-color: #4caf50;
-      border-radius: 4px;
-      transition: width 0.4s ease-in-out;
-    }
-    .option-result {
-      margin-top: 5px;
-    }
-    .views {
-      font-size: 0.9em;
-      color: #666;
-    }
+    body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+    .question { margin-bottom: 30px; }
+    .options button { display: block; width: 100%; margin: 5px 0; padding: 10px; border: none; background: #ddd; cursor: pointer; border-radius: 6px; }
+    .bar { height: 14px; background: #4caf50; border-radius: 4px; transition: 0.3s; }
+    .result { margin-top: 10px; }
+    .views { font-size: 0.9em; color: #666; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Oqqo'rg'on uchun xizmat ko'rsatish</h2>
+    <h2>Oqqo'rg'on so‘rovnomasi</h2>
 
     <div class="question" data-id="q1">
-      <p>1. Siz bitta ilovada hamma xizmatlarni ishlatishni xohlaysizmi?</p>
-      <div class="views" id="views-q1">👁 0 kishi ko'rdi</div>
+      <p>1. Ilova ichida barcha xizmatlar bo‘lishi kerakmi?</p>
+      <div class="views" id="views-q1">👁 0</div>
       <div class="options">
         <button onclick="vote('q1', 'Ha')">Ha</button>
-        <button onclick="vote('q1', 'Yoq')">Yo‘q</button>
+        <button onclick="vote('q1', 'Yo‘q')">Yo‘q</button>
       </div>
       <div class="result" id="result-q1"></div>
     </div>
 
     <div class="question" data-id="q2">
-      <p>2. Taksi, ovqat, ishchi chaqirish, to‘lov – hammasi bitta joyda bo‘lishi sizga qulaymi?</p>
-      <div class="views" id="views-q2">👁 0 kishi ko'rdi</div>
+      <p>2. Taksi, ovqat, to‘lov — barchasi bitta ilovada foydali deb o‘ylaysizmi?</p>
+      <div class="views" id="views-q2">👁 0</div>
       <div class="options">
         <button onclick="vote('q2', 'Ha albatta')">Ha albatta</button>
         <button onclick="vote('q2', 'Kerakli ekan')">Kerakli ekan</button>
-        <button onclick="vote('q2', 'Yo‘q kerak emas')">Yo‘q kerak emas</button>
+        <button onclick="vote('q2', 'Yo‘q')">Yo‘q</button>
       </div>
       <div class="result" id="result-q2"></div>
     </div>
-
-    <div class="question" data-id="q3">
-      <p>3. Bitta akkaunt orqali hamma xizmatlardan foydalanish, tarixni ko‘rish, real holatni kuzatish imkoniyati bo‘lsa nima deysiz?</p>
-      <div class="views" id="views-q3">👁 0 kishi ko'rdi</div>
-      <div class="options">
-        <button onclick="vote('q3', 'Yaxshi bo‘lar edi')">Yaxshi bo‘lar edi</button>
-        <button onclick="vote('q3', 'Menga kerak emas')">Menga kerak emas</button>
-      </div>
-      <div class="result" id="result-q3"></div>
-    </div>
   </div>
 
-  <script>
-    const pollData = JSON.parse(localStorage.getItem('pollData') || '{}');
-    const viewCounts = JSON.parse(localStorage.getItem('viewCounts') || '{}');
-    const votes = JSON.parse(localStorage.getItem('votes') || '{}');
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    const questions = {
-      q1: ['Ha', 'Yoq'],
-      q2: ['Ha albatta', 'Kerakli ekan', 'Yo‘q kerak emas'],
-      q3: ['Yaxshi bo‘lar edi', 'Menga kerak emas']
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXJSvrT31Bss6bs-WJe_Hm1kyccip2P_4",
+      authDomain: "sorovnoma-93601.firebaseapp.com",
+      databaseURL: "https://sorovnoma-93601-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "sorovnoma-93601",
+      storageBucket: "sorovnoma-93601.firebasestorage.app",
+      messagingSenderId: "607837032856",
+      appId: "1:607837032856:web:a319a6e101b92c12d25bed",
+      measurementId: "G-Q3KH2LFVTW"
     };
 
-    Object.keys(questions).forEach(id => {
-      if (!pollData[id]) {
-        pollData[id] = {};
-        questions[id].forEach(opt => pollData[id][opt] = 0);
-      }
-      if (!votes[id]) {
-        votes[id] = null;
-      }
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-      viewCounts[id] = (viewCounts[id] || 0) + 1;
-      document.getElementById(`views-${id}`).innerText = `👁 ${viewCounts[id]} kishi ko'rdi`;
-      renderResults(id);
+    const questions = {
+      q1: ['Ha', 'Yo‘q'],
+      q2: ['Ha albatta', 'Kerakli ekan', 'Yo‘q']
+    };
+
+    Object.keys(questions).forEach(qid => {
+      const viewsRef = ref(db, `polls/${qid}/views`);
+      runTransaction(viewsRef, current => (current || 0) + 1);
+
+      onValue(viewsRef, snapshot => {
+        document.getElementById(`views-${qid}`).innerText = `👁 ${snapshot.val() || 0} kishi ko‘rdi`;
+      });
+
+      const votesRef = ref(db, `polls/${qid}/votes`);
+      onValue(votesRef, snapshot => {
+        const data = snapshot.val() || {};
+        const total = Object.values(data).reduce((a, b) => a + b, 0) || 1;
+
+        const resultDiv = document.getElementById(`result-${qid}`);
+        resultDiv.innerHTML = '';
+
+        questions[qid].forEach(opt => {
+          const count = data[opt] || 0;
+          const percent = Math.round((count / total) * 100);
+          resultDiv.innerHTML += `
+            <div style="margin-top: 5px;">
+              ${opt}: ${count} ta (${percent}%)
+              <div class="bar" style="width: ${percent}%"></div>
+            </div>
+          `;
+        });
+      });
     });
 
-    function vote(questionId, option) {
-      const prevVote = votes[questionId];
-      if (prevVote && prevVote !== option) pollData[questionId][prevVote]--;
-      pollData[questionId][option]++;
-      votes[questionId] = option;
-
-      localStorage.setItem('pollData', JSON.stringify(pollData));
-      localStorage.setItem('votes', JSON.stringify(votes));
-      renderResults(questionId);
-    }
-
-    function renderResults(questionId) {
-      const resultBox = document.getElementById(`result-${questionId}`);
-      const data = pollData[questionId];
-      const total = Object.values(data).reduce((a, b) => a + b, 0) || 1;
-
-      resultBox.innerHTML = '';
-
-      for (let [key, count] of Object.entries(data)) {
-        const percent = Math.round((count / total) * 100);
-        resultBox.innerHTML += `
-          <div class="option-result">
-            ${key}: ${count} ta (${percent}%)
-            <div class="bar" style="width: ${percent}%"></div>
-          </div>
-        `;
-      }
-    }
-
-    localStorage.setItem('pollData', JSON.stringify(pollData));
-    localStorage.setItem('viewCounts', JSON.stringify(viewCounts));
-    localStorage.setItem('votes', JSON.stringify(votes));
+    window.vote = (qid, option) => {
+      const voteRef = ref(db, `polls/${qid}/votes/${option}`);
+      runTransaction(voteRef, current => (current || 0) + 1);
+    };
   </script>
 </body>
 </html>

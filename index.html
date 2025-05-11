@@ -16,7 +16,8 @@
 </head>
 <body>
   <div class="container">
-    <h2>Oqqo'rg'on kelajagi: Ishni oson qilamiz!</h2>
+    <h2 style="text-align:center; margin-bottom: 30px;">Oqqo‘rg‘on kelajagi: Ishni oson qilamiz!</h2>
+
 
     <div class="question" data-id="q1">
       <p>1. Ilova ichida barcha xizmatlar bo‘lishi kerakmi?</p>
@@ -107,20 +108,22 @@
     });
 
     window.vote = (qid, option) => {
-      if (userVotes[qid]) {
-        // If a vote has already been made for this question, update it
-        const previousVote = userVotes[qid];
-        if (previousVote !== option) {
-          const previousVoteRef = ref(db, `polls/${qid}/votes/${previousVote}`);
-          runTransaction(previousVoteRef, current => (current || 0) - 1);
-        }
-      }
-      const voteRef = ref(db, `polls/${qid}/votes/${option}`);
-      runTransaction(voteRef, current => (current || 0) + 1);
+    const voteKey = `vote-${qid}`;
+    const previousVote = localStorage.getItem(voteKey);
 
-      // Track the user's vote
-      userVotes[qid] = option;
-    };
+    if (previousVote === option) return; // bir xil variantni yana bosmasin
+
+    if (previousVote) {
+      const previousVoteRef = ref(db, `polls/${qid}/votes/${previousVote}`);
+      runTransaction(previousVoteRef, current => Math.max((current || 1) - 1, 0)); // eski ovozni kamaytir
+    }
+
+    const voteRef = ref(db, `polls/${qid}/votes/${option}`);
+    runTransaction(voteRef, current => (current || 0) + 1); // yangi variantga ovoz qo‘sh
+
+    localStorage.setItem(voteKey, option); // tanlovni localStorage ga yoz
+  };
+
   </script>
 </body>
 </html>
